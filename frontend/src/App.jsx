@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import LoginPage from "./pages/login/login";
+import RegisterPage from "./pages/register/register";
 
 export default function App() {
-  const [message, setMessage] = useState("Loading...");
+  const [page, setPage] = useState("login");
 
-  useEffect(() => {
-    fetch("/api")
-      .then((response) => response.json())
-      .then((data) => setMessage(data.message))
-      .catch(() => setMessage("Failed to load message"));
-  }, []);
-
-  return <div>{message}</div>;
+  return page === "login" ? (
+    <LoginPage onNavigate={setPage} />
+  ) : (
+    <RegisterPage onNavigate={setPage} />
+  );
 }

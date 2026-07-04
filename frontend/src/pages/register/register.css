@@ -1,0 +1,192 @@
+@import "../../App.css";
+
+html {
+  font-size: var(--font-size);
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-base);
+  background: var(--bg);
+  color: var(--foreground);
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.center-xy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.max-w-md {
+  max-width: 420px;
+}
+
+.wordmark {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.wordmark .brand {
+  font-family: var(--brand-serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: 1.875rem;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.title {
+  font-family: var(--brand-serif);
+  font-weight: 500;
+  font-size: 1.375rem;
+  margin: 0 0 0.25rem 0;
+  justify-self: center;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: var(--muted-foreground);
+  margin: 0 0 1.5rem 0;
+  justify-self: center;
+}
+
+.form {
+  display: block;
+}
+
+.form-row {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--foreground);
+  font-size: 0.9375rem;
+}
+
+.input:hover {
+  background: var(--input-bg-light);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.2rem;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  cursor: pointer;
+}
+
+.checkbox.checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox svg {
+  display: block;
+  color: var(--primary-foreground);
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border: 0;
+  margin-top: 1rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+}
+
+.btn-primary:active {
+  background: var(--primary);
+}
+
+.muted-note {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  color: var(--foreground);
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+@media (max-width: 420px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .wordmark .brand {
+    font-size: 1.5rem;
+  }
+}
+
+.submitted-note {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: var(--muted-foreground);
+}
