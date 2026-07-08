@@ -57,7 +57,7 @@ body {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 3rem 2rem;
+  padding: 2.25rem 1.5rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -72,7 +72,7 @@ body {
 .subtitle {
   font-size: 0.9375rem;
   color: var(--muted-foreground);
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   justify-self: center;
 }
 
@@ -81,7 +81,7 @@ body {
 }
 
 .form-row {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.9rem;
 }
 
 label {
@@ -109,7 +109,7 @@ label {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
 }
 
 .checkbox {
@@ -143,7 +143,7 @@ label {
   font-size: 0.9375rem;
   cursor: pointer;
   border: 0;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .btn-primary {
@@ -159,6 +159,11 @@ label {
   background: var(--primary);
 }
 
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .muted-note {
   text-align: center;
   margin-top: 1.5rem;
@@ -170,9 +175,12 @@ label {
   background: none;
   border: 0;
   color: var(--foreground);
-  text-decoration: underline;
   cursor: pointer;
   font-weight: 500;
+}
+
+.link-button:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 420px) {
@@ -186,7 +194,15 @@ label {
 }
 
 .submitted-note {
+  margin-top: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.95);
+  color: #991b1b;
+  font-size: 0.875rem;
+  line-height: 1.35;
   text-align: center;
-  padding: 1.5rem 0;
-  color: var(--muted-foreground);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  overflow-wrap: anywhere;
 }
