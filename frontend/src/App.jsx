@@ -4,9 +4,13 @@ import LoginPage from "./pages/login/login";
 import RegisterPage from "./pages/register/register";
 import DashboardPage from "./pages/dashboard/dashboard";
 
-function AppContent() {
+export default function App() {
   const [page, setPage] = useState("login");
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
 
   if (isAuthenticated) {
     return <DashboardPage onNavigate={setPage} />;
@@ -16,13 +20,5 @@ function AppContent() {
     <LoginPage onNavigate={setPage} />
   ) : (
     <RegisterPage onNavigate={setPage} />
-  );
-}
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 }

@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { useRegister } from "../../hooks/useAuth";
-import { useAuth } from "../../context/AuthContext";
 import "./register.css";
 
 function RegisterPage({ onNavigate }) {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-  const { isLoading } = useAuth();
-  const register = useRegister();
+  const { submitRegister, isLoading, error } = useRegister();
 
-  const isFormValid = email.trim() !== "" && password.trim() !== "";
+  const isFormValid = username.trim() !== "" && email.trim() !== "" && password.trim() !== "";
 
   async function handleSubmit(e) {
-    
+    e.preventDefault();
+    const ok = await submitRegister(username, email, password);
+    if (ok) {
+      onNavigate("dashboard");
+    }
   }
 
   return (
@@ -29,6 +31,20 @@ function RegisterPage({ onNavigate }) {
           <p className="subtitle">Get started — it only takes a moment.</p>
 
           <form onSubmit={handleSubmit} className="form">
+            <div className="form-row">
+              <label htmlFor="reg-username">Username</label>
+              <input
+                id="reg-username"
+                type="text"
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="yourname"
+                className="input"
+              />
+            </div>
+
             <div className="form-row">
               <label htmlFor="reg-email">Email</label>
               <input

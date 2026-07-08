@@ -1,20 +1,21 @@
 import { useState } from "react";
 import { useLogin } from "../../hooks/useAuth";
-import { useAuth } from "../../context/AuthContext";
 import "./login.css";
 
 function LoginPage({ onNavigate }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-  const { isLoading } = useAuth();
-  const login = useLogin();
+  const { submitLogin, isLoading, error } = useLogin();
 
   const isFormValid = email.trim() !== "" && password.trim() !== "";
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const ok = await submitLogin(email, password);
+    if (ok) {
+      onNavigate("dashboard");
+    }
   }
 
   return (
