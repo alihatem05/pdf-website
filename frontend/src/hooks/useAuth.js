@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const API_BASE = "http://127.0.0.1:8000/api/auth";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 function validateEmail(email) {
   const trimmed = email.trim();
@@ -35,7 +35,7 @@ export function useLogin() {
 
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/login`, {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.trim(), password }),
@@ -85,7 +85,7 @@ export function useRegister() {
 
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/register`, {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -102,7 +102,6 @@ export function useRegister() {
           return false;
         }
 
-        // Register auto-logs-in, same response shape as login
         login(data.access_token, data.user);
         return true;
       } catch (err) {

@@ -10,7 +10,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On first mount, restore any previous session from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedUser = localStorage.getItem(USER_KEY);
@@ -20,7 +19,6 @@ export function AuthProvider({ children }) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch {
-        // Corrupted/unparsable stored user — treat as logged out
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
       }

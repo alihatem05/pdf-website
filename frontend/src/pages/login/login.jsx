@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLogin } from "../../hooks/useAuth";
 import "./login.css";
 
-function LoginPage({ onNavigate }) {
+function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const navigate = useNavigate();
   const { submitLogin, isLoading, error } = useLogin();
 
   const isFormValid = email.trim() !== "" && password.trim() !== "";
@@ -14,7 +16,7 @@ function LoginPage({ onNavigate }) {
     e.preventDefault();
     const ok = await submitLogin(email, password);
     if (ok) {
-      onNavigate("dashboard");
+      navigate("/dashboard");
     }
   }
 
@@ -85,7 +87,7 @@ function LoginPage({ onNavigate }) {
         </div>
 
         <p className="muted-note">
-          {"Don't have an account?"} <button onClick={() => onNavigate("register")} className="link-button">Register</button>
+          {"Don't have an account?"} <button onClick={() => navigate("/register")} className="link-button">Register</button>
         </p>
       </div>
     </div>

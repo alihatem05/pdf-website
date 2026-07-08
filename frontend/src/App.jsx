@@ -1,24 +1,22 @@
-import { useState } from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/login/login";
 import RegisterPage from "./pages/register/register";
 import DashboardPage from "./pages/dashboard/dashboard";
 
 export default function App() {
-  const [page, setPage] = useState("login");
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return null;
   }
 
-  if (isAuthenticated) {
-    return <DashboardPage onNavigate={setPage} />;
-  }
-
-  return page === "login" ? (
-    <LoginPage onNavigate={setPage} />
-  ) : (
-    <RegisterPage onNavigate={setPage} />
+  return (
+    <Routes>
+      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+      <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />} />
+    </Routes>
   );
 }

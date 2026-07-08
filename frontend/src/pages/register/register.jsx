@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRegister } from "../../hooks/useAuth";
 import "./register.css";
 
-function RegisterPage({ onNavigate }) {
+function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const navigate = useNavigate();
   const { submitRegister, isLoading, error } = useRegister();
 
   const isFormValid = username.trim() !== "" && email.trim() !== "" && password.trim() !== "";
@@ -15,14 +17,14 @@ function RegisterPage({ onNavigate }) {
     e.preventDefault();
     const ok = await submitRegister(username, email, password);
     if (ok) {
-      onNavigate("dashboard");
+      navigate("/dashboard");
     }
   }
 
   return (
     <div className="min-h-screen center-xy px-4">
       <div className="w-full max-w-md">
-        <div className="wordmark">
+        <div className="wordmark-register">
           <span className="brand">Doclify</span>
         </div>
 
@@ -100,7 +102,7 @@ function RegisterPage({ onNavigate }) {
         </div>
 
         <p className="muted-note">
-          Already have an account? {" "}<button onClick={() => onNavigate("login")} className="link-button">Sign in</button>
+          Already have an account? {" "}<button onClick={() => navigate("/login")} className="link-button">Sign in</button>
         </p>
       </div>
     </div>

@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function DashboardPage({ onNavigate }) {
+function DashboardPage() {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   return (
@@ -14,7 +16,7 @@ function DashboardPage({ onNavigate }) {
         <button
           onClick={() => {
             logout();
-            onNavigate("login");
+            navigate("/login");
           }}
           className="btn btn-primary"
           style={{ width: "100%" }}
