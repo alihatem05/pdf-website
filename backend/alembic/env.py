@@ -13,6 +13,7 @@ if str(BACKEND_DIR) not in sys.path:
 from config import DATABASE_URL
 from models.base import Base
 from models.user import User
+from models.refresh_token import RefreshToken
 
 config = context.config
 

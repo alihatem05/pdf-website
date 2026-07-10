@@ -15,7 +15,7 @@ function RegisterPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const ok = await submitRegister(username, email, password);
+    const ok = await submitRegister(username, email, password, remember);
     if (ok) {
       navigate("/dashboard");
     }

@@ -10,6 +10,7 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    remember_me: bool = False
 
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

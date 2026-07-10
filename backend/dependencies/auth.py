@@ -1,38 +1,39 @@
-from uuid import UUID
-
+# services/auth_services/jwt.py (add to existing file)
+from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-
 from database import get_db
 from models.user import User
-from services.auth_services.jwt import decode_access_token
 
-security = HTTPBearer(auto_error=False)
+SECRET_KEY = "your-secret-key"  # pull from env/config in real code
+ALGORITHM = "HS256"
 
+bearer_scheme = HTTPBearer(auto_error=False)
+
+def decode_access_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired access token",
+        )
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
-):
-    if credentials is None or not credentials.scheme.lower() == "bearer":
+) -> User:
+    if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
     payload = decode_access_token(credentials.credentials)
-    if payload is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-
     user_id = payload.get("sub")
-    if not user_id:
+    if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
-    try:
-        user_uuid = UUID(user_id)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-
-    user = await db.scalar(select(User).where(User.id == user_uuid))
+    user = await db.scalar(select(User).where(User.id == int(user_id)))
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 

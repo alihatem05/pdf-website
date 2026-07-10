@@ -1,5 +1,5 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
 class User(Base):
@@ -21,3 +21,5 @@ class User(Base):
     String(255),
     nullable=False
   )
+
+  refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user")

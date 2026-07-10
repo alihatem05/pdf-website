@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
-import { useAuth } from "../context/AuthContext";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
+import api from "../api/axios";
+import { useAuth as useAuthContext } from "../context/AuthContext";
 
 function validateEmail(email) {
   const trimmed = email.trim();
@@ -18,12 +17,12 @@ function validatePassword(password) {
 }
 
 export function useLogin() {
-  const { login } = useAuth();
+  const { login } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const submitLogin = useCallback(
-    async (email, password) => {
+    async (email, password, rememberMe) => {
       setError("");
 
       const emailError = validateEmail(email);
@@ -35,23 +34,16 @@ export function useLogin() {
 
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim(), password }),
+        const res = await api.post("/auth/login", {
+          email: email.trim(),
+          password,
+          remember_me: rememberMe,
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.detail || "Something went wrong. Please try again.");
-          return false;
-        }
-
-        login(data.access_token, data.user);
+        login(res.data.access_token, res.data.user);
         return true;
       } catch (err) {
-        setError("Unable to reach the server. Please try again.");
+        setError(err.response?.data?.detail || "Something went wrong. Please try again.");
         return false;
       } finally {
         setIsLoading(false);
@@ -64,7 +56,7 @@ export function useLogin() {
 }
 
 export function useRegister() {
-  const { login } = useAuth();
+  const { login } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,27 +77,16 @@ export function useRegister() {
 
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: username.trim(),
-            email: email.trim(),
-            password,
-          }),
+        const res = await api.post("/auth/register", {
+          username: username.trim(),
+          email: email.trim(),
+          password,
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.detail || "Something went wrong. Please try again.");
-          return false;
-        }
-
-        login(data.access_token, data.user);
+        login(res.data.access_token, res.data.user);
         return true;
       } catch (err) {
-        setError("Unable to reach the server. Please try again.");
+        setError(err.response?.data?.detail || "Something went wrong. Please try again.");
         return false;
       } finally {
         setIsLoading(false);

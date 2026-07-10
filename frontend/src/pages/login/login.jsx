@@ -14,7 +14,7 @@ function LoginPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const ok = await submitLogin(email, password);
+    const ok = await submitLogin(email, password, remember);
     if (ok) {
       navigate("/dashboard");
     }

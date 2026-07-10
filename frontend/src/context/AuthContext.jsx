@@ -1,9 +1,8 @@
+// context/AuthContext.jsx
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import api from "../api/axios";
 
 const AuthContext = createContext(null);
-
-const TOKEN_KEY = "doclify_token";
-const USER_KEY = "doclify_user";
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
@@ -11,34 +10,40 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-
-    if (storedToken && storedUser) {
+    async function bootstrap() {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        const refreshRes = await api.post("/auth/refresh");
+        const newToken = refreshRes.data.access_token;
+
+        const meRes = await api.get("/auth/me", {
+          headers: { Authorization: `Bearer ${newToken}` },
+        });
+
+        setToken(newToken);
+        setUser(meRes.data);
       } catch {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    setIsLoading(false);
+    bootstrap();
   }, []);
 
   function login(newToken, newUser) {
-    localStorage.setItem(TOKEN_KEY, newToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
   }
 
-  function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setToken(null);
-    setUser(null);
+  async function logout() {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      setToken(null);
+      setUser(null);
+    }
   }
 
   const value = useMemo(
@@ -49,6 +54,7 @@ export function AuthProvider({ children }) {
       isLoading,
       login,
       logout,
+      setToken,
     }),
     [token, user, isLoading]
   );
