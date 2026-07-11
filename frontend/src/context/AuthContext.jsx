@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
         const refreshRes = await api.post("/auth/refresh");
         const newToken = refreshRes.data.access_token;
 
-        const meRes = await api.get("/auth/me", {
+        const meRes = await api.get("/users/me", {
           headers: { Authorization: `Bearer ${newToken}` },
         });
 

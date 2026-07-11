@@ -12,7 +12,7 @@ function validateEmail(email) {
 
 function validatePassword(password) {
   if (!password) return "Password is required";
-  if (password.length < 5) return "Password must be at least 5 characters";
+  if (password.length < 8) return "Password must be at least 8 characters";
   return null;
 }
 
@@ -61,7 +61,7 @@ export function useRegister() {
   const [error, setError] = useState("");
 
   const submitRegister = useCallback(
-    async (username, email, password) => {
+    async (username, email, password, rememberMe) => {
       setError("");
 
       const emailError = validateEmail(email);
@@ -81,6 +81,7 @@ export function useRegister() {
           username: username.trim(),
           email: email.trim(),
           password,
+          remember_me: rememberMe,
         });
 
         login(res.data.access_token, res.data.user);

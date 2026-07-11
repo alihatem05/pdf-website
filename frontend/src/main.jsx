@@ -6,8 +6,12 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { setupInterceptors } from "./api/interceptors";
 
 function InterceptorSetup({ children }) {
-  const { setToken, logout } = useAuth();
-  const tokenRef = useRef(null);
+  const { token, setToken, logout } = useAuth();
+  const tokenRef = useRef(token);
+
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
 
   useEffect(() => {
     setupInterceptors(

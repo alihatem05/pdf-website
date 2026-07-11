@@ -6,6 +6,7 @@ class UserRegister(BaseModel):
     username: str
     email: EmailStr
     password: str
+    remember_me: bool = False
 
 class UserLogin(BaseModel):
     email: EmailStr

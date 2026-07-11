@@ -1,15 +1,17 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, status
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models.user import User
 from models.refresh_token import RefreshToken
-from schemas.user import UserLogin, UserRead, UserRegister
+from schemas.user import UserLogin, UserRegister
 from schemas.login import LoginRead
+from schemas.auth import PasswordChange
 from services.auth_services.jwt import create_access_token
 from services.auth_services.password import hash_password, verify_password
-from services.auth_services.refresh_token import generate_refresh_token, hash_token, create_refresh_token
+from services.auth_services.refresh_token import hash_token, create_refresh_token, rotate_refresh_token, revoke_all_refresh_tokens
+from dependencies.auth import get_current_user  
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -38,7 +40,7 @@ async def register(user_data: UserRegister, response: Response, db: AsyncSession
     await db.refresh(new_user)
 
     token = create_access_token(new_user.id)
-    await create_refresh_token(db, response, new_user.id, remember_me=False)
+    await create_refresh_token(db, response, new_user.id, remember_me=user_data.remember_me)
     await db.refresh(new_user)
 
     return {
@@ -80,22 +82,11 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
     )
     db_token = result.scalar_one_or_none()
 
-    if not db_token or db_token.revoked or db_token.expires_at < datetime.now(timezone.utc):
+    if not db_token or db_token.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
 
-    db_token.revoked = True
     remaining = db_token.expires_at - datetime.now(timezone.utc)
-
-    new_raw_token = generate_refresh_token()
-    db.add(
-        RefreshToken(
-            user_id=db_token.user_id,
-            token_hash=hash_token(new_raw_token),
-            expires_at=db_token.expires_at,
-        )
-    )
-    await db.commit()
-
+    new_raw_token = await rotate_refresh_token(db, db_token)
     access_token = create_access_token(db_token.user_id)
 
     response.set_cookie(
@@ -115,12 +106,32 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
 async def logout(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     raw_token = request.cookies.get("refresh_token")
     if raw_token:
-        result = await db.execute(
-            select(RefreshToken).where(RefreshToken.token_hash == hash_token(raw_token))
+        await db.execute(
+            delete(RefreshToken).where(RefreshToken.token_hash == hash_token(raw_token))
         )
-        if db_token := result.scalar_one_or_none():
-            db_token.revoked = True
-            await db.commit()
+        await db.commit()
 
     response.delete_cookie("refresh_token", path="/api/auth/refresh")
     return {"detail": "Logged out"}
+
+
+@router.post("/change-password", status_code=status.HTTP_200_OK)
+async def change_password(
+    data: PasswordChange,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect",
+        )
+
+    current_user.hashed_password = hash_password(data.new_password)
+    await revoke_all_refresh_tokens(db, current_user.id)
+    await db.commit()
+
+    response.delete_cookie("refresh_token", path="/api/auth/refresh")
+
+    return {"detail": "Password changed. Please log in again."}
