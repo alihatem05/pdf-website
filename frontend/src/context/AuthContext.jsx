@@ -1,49 +1,21 @@
-// context/AuthContext.jsx
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from "../api/axios";
+import { createContext, useContext, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function bootstrap() {
-      try {
-        const refreshRes = await api.post("/auth/refresh");
-        const newToken = refreshRes.data.access_token;
-
-        const meRes = await api.get("/users/me", {
-          headers: { Authorization: `Bearer ${newToken}` },
-        });
-
-        setToken(newToken);
-        setUser(meRes.data);
-      } catch {
-        setToken(null);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    bootstrap();
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   function login(newToken, newUser) {
     setToken(newToken);
     setUser(newUser);
+    setIsLoading(false);
   }
 
   async function logout() {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      setToken(null);
-      setUser(null);
-    }
+    setToken(null);
+    setUser(null);
   }
 
   const value = useMemo(

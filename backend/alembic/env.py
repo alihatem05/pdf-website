@@ -7,13 +7,14 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import pool
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
+PROJECT_ROOT = BACKEND_DIR.parent
+for root in (PROJECT_ROOT, BACKEND_DIR):
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
 
-from config import DATABASE_URL
+from backend.core.config import DATABASE_URL
 from models.base import Base
 from models.user import User
-from models.refresh_token import RefreshToken
 
 config = context.config
 

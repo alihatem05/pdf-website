@@ -1,8 +1,14 @@
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.auth import router as auth_router
-from routers.users import router as users_router
-from config import FRONTEND_URL
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from backend.api.router import api_router
+from backend.core.config import FRONTEND_URL
 
 app = FastAPI(title="PDF Website API")
 
@@ -14,5 +20,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
-app.include_router(users_router)
+app.include_router(api_router)
