@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useRegister } from "../../hooks/useAuth";
+import { useRegisterMutation } from "../../hooks/useMutations";
+import { getErrorMessage } from "../../utils/errorHandler";
 import "./register.css";
 
 function RegisterPage() {
@@ -8,16 +9,26 @@ function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { submitRegister, isLoading, error } = useRegister();
+  const mutation = useRegisterMutation();
 
   const isFormValid = username.trim() !== "" && email.trim() !== "" && password.trim() !== "";
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const ok = await submitRegister(username, email, password, remember);
-    if (ok) {
+    setError("");
+
+    try {
+      await mutation.mutateAsync({
+        username,
+        email,
+        password,
+        remember_me: remember,
+      });
       navigate("/dashboard");
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   }
 
@@ -95,8 +106,8 @@ function RegisterPage() {
 
             {error ? <p className="submitted-note">{error}</p> : null}
 
-            <button type="submit" className="btn btn-primary" disabled={!isFormValid || isLoading}>
-              {isLoading ? "Creating account..." : "Create account"}
+            <button type="submit" className="btn btn-primary" disabled={!isFormValid || mutation.isPending}>
+              {mutation.isPending ? "Creating account..." : "Create account"}
             </button>
           </form>
         </div>

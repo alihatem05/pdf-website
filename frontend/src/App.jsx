@@ -1,11 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useAuth } from "./context/AuthContext";
+import { useAuthStore } from "./stores/authStore";
 import LoginPage from "./pages/login/login";
 import RegisterPage from "./pages/register/register";
 import DashboardPage from "./pages/dashboard/dashboard";
 
 export default function App() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
     return null;

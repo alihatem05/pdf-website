@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useAuthStore } from "./stores/authStore";
 import { setupInterceptors } from "./api/interceptors";
+import { queryClient } from "./lib/queryClient";
 
 function InterceptorSetup({ children }) {
-  const { token, setToken, logout } = useAuth();
+  const { token, setToken } = useAuthStore();
   const tokenRef = useRef(token);
 
   useEffect(() => {
@@ -14,15 +16,8 @@ function InterceptorSetup({ children }) {
   }, [token]);
 
   useEffect(() => {
-    setupInterceptors(
-      () => tokenRef.current,
-      (newToken) => {
-        tokenRef.current = newToken;
-        setToken(newToken);
-      },
-      logout
-    );
-  }, [setToken, logout]);
+    setupInterceptors(() => tokenRef.current);
+  }, []);
 
   return children;
 }
@@ -30,11 +25,11 @@ function InterceptorSetup({ children }) {
 const container = document.getElementById("root");
 const root = createRoot(container);
 root.render(
-  <BrowserRouter>
-    <AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <InterceptorSetup>
         <App />
       </InterceptorSetup>
-    </AuthProvider>
-  </BrowserRouter>
+    </BrowserRouter>
+  </QueryClientProvider>
 );

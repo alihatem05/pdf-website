@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLogin } from "../../hooks/useAuth";
+import { useLoginMutation } from "../../hooks/useMutations";
+import { getErrorMessage } from "../../utils/errorHandler";
 import "./login.css";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { submitLogin, isLoading, error } = useLogin();
+  const mutation = useLoginMutation();
 
   const isFormValid = email.trim() !== "" && password.trim() !== "";
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const ok = await submitLogin(email, password, remember);
-    if (ok) {
+    setError("");
+
+    try {
+      await mutation.mutateAsync({
+        email,
+        password,
+        remember_me: remember,
+      });
       navigate("/dashboard");
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   }
 
@@ -80,8 +90,8 @@ function LoginPage() {
 
             {error ? <p className="submitted-note">{error}</p> : null}
 
-            <button type="submit" className="btn btn-primary" disabled={!isFormValid || isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+            <button type="submit" className="btn btn-primary" disabled={!isFormValid || mutation.isPending}>
+              {mutation.isPending ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </div>

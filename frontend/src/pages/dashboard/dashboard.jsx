@@ -1,9 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuthStore } from "../../stores/authStore";
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthStore();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
 
   return (
     <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "2rem", background: "#f5f7fb" }}>
@@ -14,14 +19,11 @@ function DashboardPage() {
         </p>
 
         <button
-          onClick={() => {
-            logout();
-            navigate("/login");
-          }}
+          onClick={handleLogout}
           className="btn btn-primary"
-          style={{ width: "100%" }}
+          style={{ width: "100%"}}
         >
-          Log out
+            Log out
         </button>
       </div>
     </div>
