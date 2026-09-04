@@ -5,19 +5,15 @@
   --brand-serif: "Fraunces", Georgia, serif;
   --font-size: 16px;
 
-  --bg: #f7f5f2;
-  --foreground: #1a1612;
-  --card: #ffffff;
-  --muted: #ede8e0;
-  --muted-foreground: #7a6f62;
-  --primary: #2d1f0e;
-  --primary-light: #422f15;
-  --primary-lighter: #563d1b;
-  --primary-foreground: #f7f5f2;
-  --accent: #c9a96e;
-  --border: rgba(45, 31, 14, 0.12);
-  --input-bg: #f0ece5;
-  --input-bg-light: #f4f1ec;
-  --radius-lg: 16px;
-  --shadow-sm: 0 6px 20px rgba(18, 16, 14, 0.06);
+	--bg: #f7f5f2;
+	--foreground: #1a1612;
+	--card: #ffffff;
+	--muted-foreground: #7a6f62;
+	--primary: #2d1f0e;
+	--primary-light: #422f15;
+	--primary-foreground: #f7f5f2;
+	--border: rgba(45, 31, 14, 0.12);
+	--input-bg: #f0ece5;
+	--input-bg-dark: #e8e4dc;
+	--input-bg-light: #f4f1ec;
 }

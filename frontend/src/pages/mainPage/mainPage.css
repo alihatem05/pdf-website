@@ -1,0 +1,7 @@
+@import "../../App.css";
+
+.main-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}

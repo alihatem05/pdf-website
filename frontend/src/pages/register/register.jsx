@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useRegisterMutation } from "../../hooks/useMutations";
+import { useRegisterMutation } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errorHandler";
 import "./register.css";
 
@@ -26,7 +26,7 @@ function RegisterPage() {
         password,
         remember_me: remember,
       });
-      navigate("/dashboard");
+      navigate("/main");
     } catch (err) {
       setError(getErrorMessage(err));
     }

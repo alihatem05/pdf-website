@@ -1,6 +1,4 @@
-from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
-from uuid import UUID
+from pydantic import BaseModel
 from .user import UserRead
 
 class LoginRead(BaseModel):
