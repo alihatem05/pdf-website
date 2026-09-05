@@ -38,3 +38,15 @@ export async function sendMessage({ chatId, content }) {
     throw err;
   }
 }
+
+export async function deleteChat(chatId) {
+  try {
+    await api.delete(`/chats/${chatId}`);
+    return;
+  } catch (error) {
+    const message = getErrorMessage(error);
+    const err = new Error(message);
+    err.originalError = error;
+    throw err;
+  }
+}

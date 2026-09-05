@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getChat, getChats, sendMessage } from "../api/chat";
+import { getChat, getChats, sendMessage, deleteChat } from "../api/chat";
 
 export function useGetChats() {
   return useQuery({
@@ -23,6 +23,20 @@ export function useSendMessage() {
     mutationFn: sendMessage,
     onSuccess: (messages) => {
       const chatId = messages[0]?.chat_id;
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+      if (chatId) {
+        queryClient.invalidateQueries({ queryKey: ["chats", chatId] });
+      }
+    },
+  });
+}
+
+export function useDeleteChat() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteChat,
+    onSuccess: (_, chatId) => {
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       if (chatId) {
         queryClient.invalidateQueries({ queryKey: ["chats", chatId] });

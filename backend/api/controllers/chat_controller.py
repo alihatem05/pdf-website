@@ -85,3 +85,29 @@ async def list_chats(
         .order_by(func.coalesce(last_msg.c.last_at, Chat.created_at).desc())
     )
     return result.scalars().all()
+
+
+@router.delete("/{chat_id}", status_code=status.HTTP_200_OK)
+async def delete_chat(
+    chat_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    chat = await db.scalar(
+        select(Chat)
+        .where(
+            Chat.id == chat_id,
+            Chat.user_id == user.id,
+        )
+    )
+
+    if chat is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
+        )
+
+    await db.delete(chat)
+    await db.commit()
+
+    return {"message": "Chat deleted successfully"}
