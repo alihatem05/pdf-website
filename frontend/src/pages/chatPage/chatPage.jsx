@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useGetChat, useSendMessage } from "../../hooks/useChat.js";
-import { Send, Plus } from "lucide-react";
+import { Send, Loader2, AlertCircle, FileText } from "lucide-react";
 import ChatMessage from "../chatMessage/chatMessage.jsx";
 import TypingIndicator from "../chatMessage/typingIndicator.jsx";
 import "./chatPage.css";
@@ -16,6 +16,8 @@ function ChatPage() {
   const { mutate: sendMessage, isPending } = useSendMessage();
 
   const messages = chat?.messages ?? [];
+  const documentStatus = chat?.document?.status;
+  const isDocumentReady = documentStatus === "ready";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,10 +25,14 @@ function ChatPage() {
 
   function handleSend() {
     const text = input.trim();
-    if (!text || isPending) return;
+    if (!text || isPending || !isDocumentReady) return;
 
     sendMessage({ chatId, content: text });
     setInput("");
+
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
   }
 
   function handleKey(e) {
@@ -50,37 +56,72 @@ function ChatPage() {
   return (
     <div className="chat-page">
       <div className="chat-messages">
-        <div className="chat-messages-inner">
-          {messages.map((msg) => (
-            <ChatMessage key={msg.id} role={msg.role} text={msg.content} />
-          ))}
+        {messages.length === 0 ? (
+          <div className="chat-empty-state">
+            <h1 className="chat-empty-title">Start a conversation</h1>
+            <p className="chat-empty-subtitle">
+              {isDocumentReady
+                ? "Ask a question about your document to get started."
+                : "DocAI will answer questions about it once it's ready."}
+            </p>
+          </div>
+        ) : (
+          <div className="chat-messages-inner">
+            {messages.map((msg) => (
+              <ChatMessage key={msg.id} role={msg.role} text={msg.content} />
+            ))}
 
-          {isPending && <TypingIndicator />}
+            {isPending && <TypingIndicator />}
 
-          <div ref={bottomRef} />
-        </div>
+            <div ref={bottomRef} />
+          </div>
+        )}
       </div>
 
       <div className="chat-input-bar">
-        <div className="chat-input-inner">
-          <button type="button" className="icon-btn-round" aria-label="Attach file">
-            <Plus size={16} strokeWidth={1.8} />
-          </button>
+        {chat?.document && (
+          <div className="chat-input-file-row">
+            <div className="chat-file-chip">
+              {documentStatus === "processing" && (
+                <>
+                  <Loader2 size={14} strokeWidth={2} className="chat-status-spinner" />
+                  <span className="chat-file-chip-name">Processing {chat.document.filename}...</span>
+                </>
+              )}
+              {documentStatus === "failed" && (
+                <>
+                  <AlertCircle size={14} strokeWidth={2} className="chat-status-error" />
+                  <span className="chat-file-chip-name">
+                    {chat.document.error_message || "Failed to process PDF"}
+                  </span>
+                </>
+              )}
+              {documentStatus === "ready" && (
+                <>
+                  <FileText size={14} strokeWidth={1.8} />
+                  <span className="chat-file-chip-name">{chat.document.filename}</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
+        <div className="chat-input-inner">
           <textarea
             ref={inputRef}
             rows={1}
             value={input}
             onChange={handleInput}
             onKeyDown={handleKey}
-            placeholder="Message DocAI..."
+            placeholder={isDocumentReady ? "Message DocAI..." : "Waiting for PDF to finish processing..."}
             className="chat-textarea"
+            disabled={!isDocumentReady}
           />
 
           <button
             type="button"
             onClick={handleSend}
-            disabled={!input.trim() || isPending}
+            disabled={!input.trim() || isPending || !isDocumentReady}
             className="icon-btn-round icon-btn-send"
             aria-label="Send message"
           >

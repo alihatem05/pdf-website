@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -9,9 +9,13 @@ from backend.models.chat import Chat
 from backend.dependencies.auth import get_current_user
 from backend.models.user import User
 from backend.models.chat_message import ChatMessage, MessageRole
+from backend.models.document import Document
 from backend.api.controllers.stubs import LLM_response
+from backend.core.storage import upload_file, delete_file
+from backend.tasks.embed import embed_file, delete_embedding
 
 router = APIRouter(prefix="/api/chats", tags=["chats"])
+
 
 @router.post("/messages", response_model=list[MessageResponseSchema], status_code=status.HTTP_201_CREATED)
 async def send_message(
@@ -19,22 +23,17 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if message.chat_id is None:
-        chat = Chat(title="Unnamed Chat", user_id=user.id)
-        db.add(chat)
-        await db.flush()
-    else:
-        chat = await db.scalar(
-            select(Chat).where(
-                Chat.id == message.chat_id,
-                Chat.user_id == user.id,
-            )
+    chat = await db.scalar(
+        select(Chat).where(
+            Chat.id == message.chat_id,
+            Chat.user_id == user.id,
         )
-        if chat is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Chat not found",
-            )
+    )
+    if chat is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
+        )
 
     response = LLM_response()
 
@@ -49,6 +48,45 @@ async def send_message(
     return [user_message, ai_message]
 
 
+@router.post("/documents", response_model=ChatResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create_chat_with_document(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if file.content_type != "application/pdf":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only PDF files are supported",
+        )
+
+    chat = Chat(title=file.filename, user_id=user.id)
+    db.add(chat)
+    await db.flush()
+
+    storage_path = await upload_file(file, chat.id)
+
+    document = Document(
+        chat_id=chat.id,
+        filename=file.filename,
+        storage_path=storage_path,
+        status="processing",
+    )
+    
+    db.add(document)
+    await db.commit()
+
+    chat = await db.scalar(
+        select(Chat)
+        .where(Chat.id == chat.id)
+        .options(selectinload(Chat.messages), selectinload(Chat.document))
+    )
+
+    embed_file.delay(str(document.id))
+
+    return chat
+
+
 @router.get("/{chat_id}", response_model=ChatResponseSchema, status_code=status.HTTP_200_OK)
 async def get_chat(
     chat_id: UUID,
@@ -58,7 +96,7 @@ async def get_chat(
     chat = await db.scalar(
         select(Chat)
         .where(Chat.id == chat_id, Chat.user_id == user.id)
-        .options(selectinload(Chat.messages))
+        .options(selectinload(Chat.messages), selectinload(Chat.document))
     )
 
     if chat is None:
@@ -98,7 +136,7 @@ async def delete_chat(
         .where(
             Chat.id == chat_id,
             Chat.user_id == user.id,
-        )
+        ).options(selectinload(Chat.document))
     )
 
     if chat is None:
@@ -106,6 +144,12 @@ async def delete_chat(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Chat not found",
         )
+
+    document = chat.document
+
+    if document is not None:
+        delete_file(document.storage_path)
+        delete_embedding(chat.id)
 
     await db.delete(chat)
     await db.commit()

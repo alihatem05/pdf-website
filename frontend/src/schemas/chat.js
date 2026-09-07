@@ -5,20 +5,28 @@ export const MessageSchema = z.object({
   role: z.string(),
   content: z.string(),
   chat_id: z.string().uuid(),
-  created_at: z.string().datetime(),
+  created_at: z.string().datetime({ offset: true }),
+});
+
+export const DocumentSchema = z.object({
+  id: z.string().uuid(),
+  filename: z.string(),
+  status: z.string(),
+  created_at: z.string().datetime({ offset: true }),
 });
 
 export const ChatSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   messages: z.array(MessageSchema),
-  created_at: z.string().datetime(),
+  document: DocumentSchema.nullable().optional(),
+  created_at: z.string().datetime({ offset: true }),
 });
 
 export const ShortChatSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
-  created_at: z.string().datetime(),
+  created_at: z.string().datetime({ offset: true }),
 });
 
 export const ChatsListSchema = z.array(ShortChatSchema);

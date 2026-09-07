@@ -9,7 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.api.router import api_router
-from backend.core.config import FRONTEND_URL
+from backend.config import FRONTEND_URL
 
 app = FastAPI(title="PDF Website API")
 

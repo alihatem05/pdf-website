@@ -28,3 +28,9 @@ class Chat(Base):
         cascade="all, delete-orphan",
         order_by="ChatMessage.created_at",
     )
+
+    document: Mapped["Document"] = relationship(
+        back_populates="chat",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

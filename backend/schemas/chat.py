@@ -12,14 +12,22 @@ class MessageResponseSchema(BaseModel):
     created_at: datetime
 
 class MessageRequestSchema(BaseModel):
-    chat_id: UUID | None = None
+    chat_id: UUID
     content: str = Field(min_length=1, max_length=10000)
+
+class DocumentResponseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    filename: str
+    status: str
+    created_at: datetime
 
 class ChatResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     title: str
     messages: list[MessageResponseSchema]
+    document: DocumentResponseSchema | None = None
     created_at: datetime
 
 class ShortChatResponseSchema(BaseModel):

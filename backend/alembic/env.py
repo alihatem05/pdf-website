@@ -12,7 +12,7 @@ for root in (PROJECT_ROOT, BACKEND_DIR):
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
 
-from backend.core.config import DATABASE_URL
+from backend.config import DATABASE_URL
 from models.base import Base
 from models.user import User
 

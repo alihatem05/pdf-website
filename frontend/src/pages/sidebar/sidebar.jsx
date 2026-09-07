@@ -30,7 +30,8 @@ function Sidebar() {
     navigate("/login");
   };
 
-  const handleDelete = (chatId) => {
+  const handleDelete = (e, chatId) => {
+    e.stopPropagation();
     deleteChat.mutate(chatId, {
 			onSuccess: () => {
 				if (chatId === activeId) {
@@ -85,7 +86,7 @@ function Sidebar() {
                 <button
                   type="button"
                   className="dropdown-item-dots"
-                  onClick={() => handleDelete(chat.id)}
+                  onClick={(e) => handleDelete(e, chat.id)}
                 >
                   Delete
                 </button>

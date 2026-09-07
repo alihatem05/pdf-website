@@ -1,76 +1,87 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSendMessage } from "../../hooks/useChat.js";
-import { Send, Plus } from "lucide-react";
+import { useCreateChatWithDocument } from "../../hooks/useChat.js";
+import { Upload, Send, FileText, X } from "lucide-react";
 import "./chatPage.css";
 
 function NewChatPage() {
-  const [input, setInput] = useState("");
-  const inputRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  const { mutate: sendMessage, isPending } = useSendMessage();
+  const { mutate: createChatWithDocument, isPending } = useCreateChatWithDocument();
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0] ?? null);
+    e.target.value = "";
+  };
+
+  function handleChooseFile() {
+    fileInputRef.current.click();
+  }
+
+  function handleRemoveFile() {
+    setFile(null);
+  }
 
   function handleSend() {
-    const text = input.trim();
-    if (!text || isPending) return;
+    if (!file || isPending) return;
 
-    sendMessage(
-			{ chatId: null, content: text },
-			{
-				onSuccess: (messages) => {
-					navigate(`/main/chat/${messages[0].chat_id}`);
-				},
-			}
-		);
-  }
-
-  function handleKey(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }
-
-  function handleInput(e) {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    createChatWithDocument(file, {
+      onSuccess: (chat) => {
+        navigate(`/main/chat/${chat.id}`);
+      },
+    });
   }
 
   return (
     <div className="chat-page">
       <div className="chat-empty-state">
         <h1 className="chat-empty-title">Start a conversation</h1>
-        <p className="chat-empty-subtitle">Ask DocAI anything to get started.</p>
-      </div>
+        <p className="chat-empty-subtitle">Upload a PDF to get started — DocAI will answer questions about it.</p>
 
-      <div className="chat-input-bar">
-        <div className="chat-input-inner">
-          <button type="button" className="icon-btn-round" aria-label="Attach file">
-            <Plus size={16} strokeWidth={1.8} />
+        <input
+          type="file"
+          accept="application/pdf"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+
+        {!file ? (
+          <button type="button" className="upload-btn" onClick={handleChooseFile}>
+            <Upload size={16} strokeWidth={1.8} />
+            Upload PDF
           </button>
+        ) : (
+          <div className="upload-selected">
+            <div className="chat-file-chip">
+              <FileText size={14} strokeWidth={1.8} />
+              <span className="chat-file-chip-name">{file.name}</span>
+              <button
+                type="button"
+                className="chat-file-chip-remove"
+                aria-label="Remove selected file"
+                onClick={handleRemoveFile}
+                disabled={isPending}
+              >
+                <X size={12} strokeWidth={2} />
+              </button>
+            </div>
 
-          <textarea
-            ref={inputRef}
-            rows={1}
-            value={input}
-            onChange={handleInput}
-            onKeyDown={handleKey}
-            placeholder="Message DocAI..."
-            className="chat-textarea"
-          />
-
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!input.trim() || isPending}
-            className="icon-btn-round icon-btn-send"
-            aria-label="Send message"
-          >
-            <Send size={15} strokeWidth={1.8} />
-          </button>
-        </div>
+            <button
+              type="button"
+              className="upload-send-btn"
+              onClick={handleSend}
+              disabled={isPending}
+            >
+              {isPending ? "Processing..." : (
+                <>
+                  Send <Send size={15} strokeWidth={1.8} />
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

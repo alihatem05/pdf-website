@@ -39,6 +39,22 @@ export async function sendMessage({ chatId, content }) {
   }
 }
 
+export async function createChatWithDocument(file) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.post("/chats/documents", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return ChatSchema.parse(response.data);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    const err = new Error(message);
+    err.originalError = error;
+    throw err;
+  }
+}
+
 export async function deleteChat(chatId) {
   try {
     await api.delete(`/chats/${chatId}`);
