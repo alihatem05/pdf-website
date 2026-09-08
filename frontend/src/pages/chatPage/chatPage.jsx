@@ -9,6 +9,7 @@ import "./chatPage.css";
 function ChatPage() {
   const { chatId } = useParams();
   const [input, setInput] = useState("");
+  const [pendingMessage, setPendingMessage] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -21,13 +22,17 @@ function ChatPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isPending]);
+  }, [messages, isPending, pendingMessage]);
 
   function handleSend() {
     const text = input.trim();
     if (!text || isPending || !isDocumentReady) return;
 
-    sendMessage({ chatId, content: text });
+    setPendingMessage(text);
+    sendMessage(
+      { chatId, content: text },
+      { onSettled: () => setPendingMessage(null) }
+    );
     setInput("");
 
     if (inputRef.current) {
@@ -56,7 +61,7 @@ function ChatPage() {
   return (
     <div className="chat-page">
       <div className="chat-messages">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !pendingMessage ? (
           <div className="chat-empty-state">
             <h1 className="chat-empty-title">Start a conversation</h1>
             <p className="chat-empty-subtitle">
@@ -70,6 +75,8 @@ function ChatPage() {
             {messages.map((msg) => (
               <ChatMessage key={msg.id} role={msg.role} text={msg.content} />
             ))}
+
+            {pendingMessage && <ChatMessage role="user" text={pendingMessage} />}
 
             {isPending && <TypingIndicator />}
 

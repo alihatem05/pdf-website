@@ -7,5 +7,5 @@ celery_app = Celery(
 )
 
 celery_app.conf.imports = (
-    "backend.tasks.embed",
+    "backend.services.embed",
 )

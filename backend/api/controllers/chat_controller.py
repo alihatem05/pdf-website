@@ -10,9 +10,9 @@ from backend.dependencies.auth import get_current_user
 from backend.models.user import User
 from backend.models.chat_message import ChatMessage, MessageRole
 from backend.models.document import Document
-from backend.api.controllers.stubs import LLM_response
+from backend.services.client import llm_response, get_messages
 from backend.core.storage import upload_file, delete_file
-from backend.tasks.embed import embed_file, delete_embedding
+from backend.services.embed import embed_file, delete_embedding
 
 router = APIRouter(prefix="/api/chats", tags=["chats"])
 
@@ -24,7 +24,9 @@ async def send_message(
     user: User = Depends(get_current_user),
 ):
     chat = await db.scalar(
-        select(Chat).where(
+        select(Chat)
+        .options(selectinload(Chat.messages))
+        .where(
             Chat.id == message.chat_id,
             Chat.user_id == user.id,
         )
@@ -35,9 +37,13 @@ async def send_message(
             detail="Chat not found",
         )
 
-    response = LLM_response()
-
     user_message = ChatMessage(role=MessageRole.user, chat_id=chat.id, content=message.content)
+
+    messages = get_messages(chat.messages)
+    messages.append({"role": user_message.role.value, "content": user_message.content})
+
+    response = llm_response(messages)
+
     ai_message = ChatMessage(role=MessageRole.assistant, chat_id=chat.id, content=response)
 
     db.add_all([user_message, ai_message])

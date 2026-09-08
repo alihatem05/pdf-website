@@ -132,7 +132,12 @@
 }
 
 .message-bubble {
-  max-width: 60%;
+  max-width: 80%;
+  padding: 0.625rem 1rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-family: var(--font-base);
 }
 
 .chat-input-bar {

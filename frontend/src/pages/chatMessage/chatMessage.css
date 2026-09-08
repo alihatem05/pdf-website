@@ -27,20 +27,38 @@
   color: var(--primary-foreground);
 }
 
-.message-bubble {
-  max-width: 78%;
-  padding: 0.625rem 1rem;
-  border-radius: 16px;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  font-family: var(--font-base);
-}
-
 .bubble-bot {
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--foreground);
   border-bottom-left-radius: 4px;
+}
+
+.bubble-bot pre {
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--input-bg);
+  margin: 0.5rem 0;
+}
+
+.bubble-bot code {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  white-space: pre;
+}
+
+.bubble-bot p {
+  margin: 0.5rem 0;
+}
+
+.bubble-bot p:first-child {
+  margin-top: 0;
+}
+
+.bubble-bot p:last-child {
+  margin-bottom: 0;
 }
 
 .bubble-user {
