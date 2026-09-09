@@ -20,6 +20,7 @@ class DocumentResponseSchema(BaseModel):
     id: UUID
     filename: str
     status: str
+    error_message: str | None = None
     created_at: datetime
 
 class ChatResponseSchema(BaseModel):
@@ -27,7 +28,7 @@ class ChatResponseSchema(BaseModel):
     id: UUID
     title: str
     messages: list[MessageResponseSchema]
-    document: DocumentResponseSchema | None = None
+    documents: list[DocumentResponseSchema] = []
     created_at: datetime
 
 class ShortChatResponseSchema(BaseModel):

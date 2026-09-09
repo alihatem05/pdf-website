@@ -17,8 +17,8 @@ function ChatPage() {
   const { mutate: sendMessage, isPending } = useSendMessage();
 
   const messages = chat?.messages ?? [];
-  const documentStatus = chat?.document?.status;
-  const isDocumentReady = documentStatus === "ready";
+  const documents = chat?.documents ?? [];
+  const isDocumentReady = documents.length > 0 && documents.every((document) => document.status === "ready");
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,30 +86,22 @@ function ChatPage() {
       </div>
 
       <div className="chat-input-bar">
-        {chat?.document && (
+        {documents.length > 0 && (
           <div className="chat-input-file-row">
-            <div className="chat-file-chip">
-              {documentStatus === "processing" && (
-                <>
-                  <Loader2 size={14} strokeWidth={2} className="chat-status-spinner" />
-                  <span className="chat-file-chip-name">Processing {chat.document.filename}...</span>
-                </>
-              )}
-              {documentStatus === "failed" && (
-                <>
-                  <AlertCircle size={14} strokeWidth={2} className="chat-status-error" />
-                  <span className="chat-file-chip-name">
-                    {chat.document.error_message || "Failed to process PDF"}
-                  </span>
-                </>
-              )}
-              {documentStatus === "ready" && (
-                <>
-                  <FileText size={14} strokeWidth={1.8} />
-                  <span className="chat-file-chip-name">{chat.document.filename}</span>
-                </>
-              )}
-            </div>
+            {documents.map((document) => (
+              <div className="chat-file-chip" key={document.id}>
+                {document.status === "processing" && <Loader2 size={14} strokeWidth={2} className="chat-status-spinner" />}
+                {document.status === "failed" && <AlertCircle size={14} strokeWidth={2} className="chat-status-error" />}
+                {document.status === "ready" && <FileText size={14} strokeWidth={1.8} />}
+                <span className="chat-file-chip-name">
+                  {document.status === "processing"
+                    ? `Processing ${document.filename}...`
+                    : document.status === "failed"
+                      ? document.error_message || "Failed to process PDF"
+                      : document.filename}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 

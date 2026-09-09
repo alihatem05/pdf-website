@@ -39,10 +39,10 @@ export async function sendMessage({ chatId, content }) {
   }
 }
 
-export async function createChatWithDocument(file) {
+export async function createChatWithDocument(files) {
   try {
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach((file) => formData.append("files", file));
     const response = await api.post("/chats/documents", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });

@@ -12,6 +12,7 @@ export const DocumentSchema = z.object({
   id: z.string().uuid(),
   filename: z.string(),
   status: z.string(),
+  error_message: z.string().nullable().optional(),
   created_at: z.string().datetime({ offset: true }),
 });
 
@@ -19,7 +20,7 @@ export const ChatSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   messages: z.array(MessageSchema),
-  document: DocumentSchema.nullable().optional(),
+  documents: z.array(DocumentSchema).default([]),
   created_at: z.string().datetime({ offset: true }),
 });
 

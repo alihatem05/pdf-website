@@ -14,7 +14,7 @@ export function useGetChat(chatId) {
     queryFn: () => getChat(chatId),
     enabled: !!chatId,
     refetchInterval: (query) =>
-      query.state.data?.document?.status === "processing" ? 2000 : false,
+      query.state.data?.documents?.some((document) => document.status === "processing") ? 2000 : false,
   });
 }
 

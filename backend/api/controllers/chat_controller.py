@@ -9,9 +9,9 @@ from backend.models.chat import Chat
 from backend.dependencies.auth import get_current_user
 from backend.models.user import User
 from backend.models.chat_message import ChatMessage, MessageRole
-from backend.models.document import Document
 from backend.services.client import llm_response, get_messages
-from backend.core.storage import upload_file, delete_file
+from backend.core.storage import delete_file
+from backend.services.chat_service import save_document
 from backend.services.embed import embed_file, delete_embedding
 
 router = APIRouter(prefix="/api/chats", tags=["chats"])
@@ -56,39 +56,37 @@ async def send_message(
 
 @router.post("/documents", response_model=ChatResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_chat_with_document(
-    file: UploadFile = File(...),
+    files: list[UploadFile] = File(...),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if file.content_type != "application/pdf":
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one PDF file is required",
+        )
+
+    if any(file.content_type != "application/pdf" for file in files):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only PDF files are supported",
         )
 
-    chat = Chat(title=file.filename, user_id=user.id)
+    chat = Chat(title=files[0].filename or "New Chat", user_id=user.id)
     db.add(chat)
     await db.flush()
 
-    storage_path = await upload_file(file, chat.id)
-
-    document = Document(
-        chat_id=chat.id,
-        filename=file.filename,
-        storage_path=storage_path,
-        status="processing",
-    )
-    
-    db.add(document)
+    documents = [await save_document(file, chat.id, db) for file in files]
     await db.commit()
 
     chat = await db.scalar(
         select(Chat)
         .where(Chat.id == chat.id)
-        .options(selectinload(Chat.messages), selectinload(Chat.document))
+        .options(selectinload(Chat.messages), selectinload(Chat.documents))
     )
 
-    embed_file.delay(str(document.id))
+    for document in documents:
+        embed_file.delay(str(document.id))
 
     return chat
 
@@ -102,7 +100,7 @@ async def get_chat(
     chat = await db.scalar(
         select(Chat)
         .where(Chat.id == chat_id, Chat.user_id == user.id)
-        .options(selectinload(Chat.messages), selectinload(Chat.document))
+        .options(selectinload(Chat.messages), selectinload(Chat.documents))
     )
 
     if chat is None:
@@ -142,7 +140,7 @@ async def delete_chat(
         .where(
             Chat.id == chat_id,
             Chat.user_id == user.id,
-        ).options(selectinload(Chat.document))
+        ).options(selectinload(Chat.documents))
     )
 
     if chat is None:
@@ -151,10 +149,9 @@ async def delete_chat(
             detail="Chat not found",
         )
 
-    document = chat.document
-
-    if document is not None:
+    for document in chat.documents:
         delete_file(document.storage_path)
+    if chat.documents:
         delete_embedding(chat.id)
 
     await db.delete(chat)
