@@ -1,16 +1,15 @@
 import uuid
 from jose import JWTError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import HTTPBearer
 from sqlalchemy import select
-from database import get_db
-from models.user import User
-from core.security.jwt import decode_access_token
+from backend.database import get_db
+from backend.models.user import User
+from backend.services.auth.jwt import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)) -> User:
+async def get_current_user(credentials=Depends(bearer_scheme), db=Depends(get_db)):
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 

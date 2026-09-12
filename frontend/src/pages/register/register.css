@@ -46,7 +46,7 @@ body {
 
 .wordmark-register .brand {
   font-family: var(--brand-serif);
-  font-weight: 300;
+  font-weight: 800;
   font-style: italic;
   font-size: 1.875rem;
   letter-spacing: -0.02em;

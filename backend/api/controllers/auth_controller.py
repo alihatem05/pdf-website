@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.core.security.jwt import create_access_token
 from backend.core.security.password import hash_password, verify_password
 from backend.database import get_db
@@ -10,10 +11,13 @@ from backend.schemas.user import UserLogin, UserRegister
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+
 @router.post("/register", response_model=LoginRead, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
+    email = user_data.email.lower()
+
     existing_user = await db.scalar(
-        select(User).where((User.email == user_data.email) | (User.username == user_data.username))
+        select(User).where((User.email == email) | (User.username == user_data.username))
     )
 
     if existing_user:
@@ -26,7 +30,7 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
     new_user = User(
         username=user_data.username,
-        email=user_data.email,
+        email=email,
         hashed_password=hashed_password,
     )
 
@@ -45,7 +49,9 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=LoginRead, status_code=status.HTTP_200_OK)
 async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
-    user = await db.scalar(select(User).where(User.email == user_data.email))
+    email = user_data.email.lower()
+
+    user = await db.scalar(select(User).where(User.email == email))
 
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(

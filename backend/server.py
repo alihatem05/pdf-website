@@ -8,13 +8,14 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.api.router import api_router
-from backend.core.config import FRONTEND_URL
+from backend.config import FRONTEND_URL
 
 app = FastAPI(title="PDF Website API")
 
+origins = [FRONTEND_URL] if FRONTEND_URL else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

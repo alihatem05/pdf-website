@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
-from backend.core.config import JWT_SECRET, ALGORITHM, JWT_EXPIRY_TIME
+from backend.config import JWT_SECRET, ALGORITHM, JWT_EXPIRY_TIME
 
 def create_access_token(user_id: int):
     expire = datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRY_TIME)

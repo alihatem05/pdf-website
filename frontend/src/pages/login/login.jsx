@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLoginMutation } from "../../hooks/useMutations";
+import { useLoginMutation } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errorHandler";
 import "./login.css";
 
@@ -24,7 +24,7 @@ function LoginPage() {
         password,
         remember_me: remember,
       });
-      navigate("/dashboard");
+      navigate("/main");
     } catch (err) {
       setError(getErrorMessage(err));
     }
