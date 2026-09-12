@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
-from backend.services.embed import chroma_collection
+from backend.services.llm.embed import get_chat_collection
 from uuid import UUID
 
 @dataclass(frozen=True)
@@ -13,10 +13,14 @@ def retrieve(chat_id: UUID | str, question: str, top_k: int = 4):
     if top_k < 1:
         return []
 
-    result = chroma_collection.query(
+    try:
+        collection = get_chat_collection(chat_id)
+    except Exception:
+        return []
+
+    result = collection.query(
         query_texts=[question],
         n_results=top_k,
-        where={"chat_id": str(chat_id)},
     )
 
     documents = result.get("documents", [[]])[0]

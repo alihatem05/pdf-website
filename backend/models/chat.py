@@ -1,8 +1,15 @@
 from uuid import UUID
-from sqlalchemy import String, ForeignKey
+from typing import TYPE_CHECKING
+
+from sqlalchemy import String, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from .base import Base
+
+if TYPE_CHECKING:
+    from .chat_message import ChatMessage
+    from .document import Document
+    from .user import User
 
 
 class Chat(Base):
@@ -13,6 +20,10 @@ class Chat(Base):
         nullable=False,
         default="New Chat",
     )
+
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summarized_up_to: Mapped[int] = mapped_column(default=0, nullable=False)
+    message_count: Mapped[int] = mapped_column(default=0, nullable=False)
 
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -33,3 +44,4 @@ class Chat(Base):
         back_populates="chat",
         cascade="all, delete-orphan",
     )
+

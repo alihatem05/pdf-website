@@ -41,3 +41,41 @@ def contextualize_question(history, question, summary=None):
         return (response.content or question).strip()
     except AuthenticationError:
         return question
+
+
+def classify_rag_need(question):
+    if ChatGroq is None:
+        return True
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "Decide whether the user's standalone question requires information "
+                "from the uploaded PDF. Reply with exactly YES or NO. Reply YES for "
+                "questions about the document, its contents, pages, figures, or facts "
+                "that must be verified in it. Reply NO for greetings, casual conversation, "
+                "writing help, or general knowledge unrelated to the document."
+            ),
+        },
+        {"role": "user", "content": question},
+    ]
+
+    try:
+        response = ChatGroq(model="openai/gpt-oss-20b", temperature=0).invoke(messages)
+        return (response.content or "YES").strip().upper().startswith("YES")
+    except Exception:
+        return True
+
+
+def llm_response(messages):
+    if ChatGroq is None:
+        return "I'm currently unable to generate a response."
+
+    try:
+        response = ChatGroq(model="openai/gpt-oss-20b", temperature=0).invoke(messages)
+        return response.content or ""
+    except AuthenticationError:
+        return "I'm currently unable to generate a response due to an authentication error."
+    except Exception:
+        return "I'm currently unable to generate a response right now. Please try again shortly."

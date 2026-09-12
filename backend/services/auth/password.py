@@ -1,3 +1,6 @@
+from passlib.context import CryptContext
+
+
 pwd_context = CryptContext(schemes=["bcrypt"])
 
 def hash_password(plain_password):

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 from uuid import UUID
 from backend.schemas.chat import (ChatResponseSchema, MessageResponseSchema, ShortChatResponseSchema, MessageRequestSchema)
 from backend.database import get_db
@@ -9,10 +8,13 @@ from backend.models.chat import Chat
 from backend.dependencies.auth import get_current_user
 from backend.models.user import User
 from backend.models.chat_message import ChatMessage, MessageRole
-from backend.services.client import llm_response, get_messages
-from backend.core.storage import delete_file
-from backend.services.chat_service import save_document
-from backend.services.embed import embed_file, delete_embedding
+from backend.services.chat.storage import delete_file
+from backend.config import CHAT_HISTORY_LIMIT, SUMMARY_THRESHOLD
+from backend.services.chat.chat_service import get_recent_messages, load_chat, load_chat_meta, save_document
+from backend.services.llm.embed import embed_file, delete_embedding
+from backend.services.llm.graph import rag_graph
+from backend.services.llm.client import get_messages
+from backend.services.llm.summarize import update_chat_summary
 
 router = APIRouter(prefix="/api/chats", tags=["chats"])
 
@@ -23,33 +25,28 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    chat = await db.scalar(
-        select(Chat)
-        .options(selectinload(Chat.messages))
-        .where(
-            Chat.id == message.chat_id,
-            Chat.user_id == user.id,
-        )
-    )
-    if chat is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Chat not found",
-        )
+    chat = await load_chat_meta(message.chat_id, user, db)
+    recent_messages = await get_recent_messages(chat.id, db, CHAT_HISTORY_LIMIT)
+    history = get_messages(recent_messages)
+    result = await rag_graph.ainvoke({
+        "chat_id": chat.id,
+        "question": message.content,
+        "history": history,
+        "summary": chat.summary,
+    })
 
     user_message = ChatMessage(role=MessageRole.user, chat_id=chat.id, content=message.content)
 
-    messages = get_messages(chat.messages)
-    messages.append({"role": user_message.role.value, "content": user_message.content})
-
-    response = llm_response(messages)
-
-    ai_message = ChatMessage(role=MessageRole.assistant, chat_id=chat.id, content=response)
+    ai_message = ChatMessage(role=MessageRole.assistant, chat_id=chat.id, content=result["answer"])
 
     db.add_all([user_message, ai_message])
+    chat.message_count += 2
     await db.commit()
     await db.refresh(user_message)
     await db.refresh(ai_message)
+
+    if chat.message_count - chat.summarized_up_to >= SUMMARY_THRESHOLD:
+        update_chat_summary.delay(str(chat.id))
 
     return [user_message, ai_message]
 
@@ -79,14 +76,10 @@ async def create_chat_with_document(
     documents = [await save_document(file, chat.id, db) for file in files]
     await db.commit()
 
-    chat = await db.scalar(
-        select(Chat)
-        .where(Chat.id == chat.id)
-        .options(selectinload(Chat.messages), selectinload(Chat.documents))
-    )
+    chat = await load_chat(chat.id, user, db)
 
     for document in documents:
-        embed_file.delay(str(document.id))
+        embed_file.delay(str(document.id), str(chat.id))
 
     return chat
 
@@ -97,16 +90,7 @@ async def get_chat(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    chat = await db.scalar(
-        select(Chat)
-        .where(Chat.id == chat_id, Chat.user_id == user.id)
-        .options(selectinload(Chat.messages), selectinload(Chat.documents))
-    )
-
-    if chat is None:
-        raise HTTPException(status_code=404, detail="Chat not found")
-
-    return chat
+    return await load_chat(chat_id, user, db)
 
 
 @router.get("", response_model=list[ShortChatResponseSchema], status_code=status.HTTP_200_OK)
@@ -135,19 +119,7 @@ async def delete_chat(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    chat = await db.scalar(
-        select(Chat)
-        .where(
-            Chat.id == chat_id,
-            Chat.user_id == user.id,
-        ).options(selectinload(Chat.documents))
-    )
-
-    if chat is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Chat not found",
-        )
+    chat = await load_chat_meta(chat_id, user, db)
 
     for document in chat.documents:
         delete_file(document.storage_path)
