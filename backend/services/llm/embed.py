@@ -1,12 +1,11 @@
 from pathlib import Path
-
 import chromadb
 from chromadb.utils import embedding_functions
 from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from backend.celery_app import celery_app
 from backend.config import CELERY_DATABASE_URL
 from backend.models.document import Document
@@ -17,10 +16,29 @@ embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_na
 chroma = chromadb.PersistentClient(path=str(Path(__file__).resolve().parents[2] / "chroma_data"))
 
 
+class ChromaEmbeddingAdapter:
+    def embed_documents(self, texts):
+        return embedding_fn(texts)
+
+    def embed_query(self, text):
+        return embedding_fn([text])[0]
+
+
+embedding_adapter = ChromaEmbeddingAdapter()
+
+
 def get_chat_collection(chat_id):
     return chroma.get_or_create_collection(
         f"chat_{chat_id}",
         embedding_function=embedding_fn,
+    )
+
+
+def get_chat_vector_store(chat_id):
+    return Chroma(
+        client=chroma,
+        collection_name=f"chat_{chat_id}",
+        embedding_function=embedding_adapter,
     )
 
 @celery_app.task

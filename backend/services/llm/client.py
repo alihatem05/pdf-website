@@ -1,16 +1,14 @@
 from groq import AuthenticationError
-
-try:
-    from langchain_groq import ChatGroq
-except ImportError:
-    ChatGroq = None
-
+from langchain_groq import ChatGroq
 
 def get_messages(chat_messages):
     return [
         {"role": getattr(m.role, "value", m.role), "content": m.content}
         for m in chat_messages
     ]
+
+def create_client():
+    return ChatGroq(model="openai/gpt-oss-20b", temperature=0)
 
 
 def contextualize_question(history, question, summary=None):
@@ -37,7 +35,8 @@ def contextualize_question(history, question, summary=None):
     try:
         if ChatGroq is None:
             return question
-        response = ChatGroq(model="openai/gpt-oss-20b", temperature=0).invoke(messages)
+        ai = create_client()
+        response = ai.invoke(messages)
         return (response.content or question).strip()
     except AuthenticationError:
         return question
@@ -62,7 +61,8 @@ def classify_rag_need(question):
     ]
 
     try:
-        response = ChatGroq(model="openai/gpt-oss-20b", temperature=0).invoke(messages)
+        ai = create_client()
+        response = ai.invoke(messages)
         return (response.content or "YES").strip().upper().startswith("YES")
     except Exception:
         return True
@@ -73,7 +73,8 @@ def llm_response(messages):
         return "I'm currently unable to generate a response."
 
     try:
-        response = ChatGroq(model="openai/gpt-oss-20b", temperature=0).invoke(messages)
+        ai = create_client()
+        response = ai.invoke(messages)
         return response.content or ""
     except AuthenticationError:
         return "I'm currently unable to generate a response due to an authentication error."

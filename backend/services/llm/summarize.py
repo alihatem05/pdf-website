@@ -5,10 +5,11 @@ from backend.celery_app import celery_app
 from backend.config import CELERY_DATABASE_URL, SUMMARY_LIMIT
 from backend.models.chat import Chat
 from backend.models.chat_message import ChatMessage
+from backend.services.llm.client import create_client
 
 sync_engine = create_engine(CELERY_DATABASE_URL)
 SyncSession = sessionmaker(bind=sync_engine)
-llm_client = ChatGroq(model="openai/gpt-oss-20b", temperature=0)
+llm_client = create_client()
 
 
 def build_summary_prompt(old_summary, new_messages):
@@ -47,6 +48,6 @@ def update_chat_summary(chat_id: str):
 
         prompt = build_summary_prompt(chat.summary, new_messages)
         response = llm_client.invoke(prompt)
-        chat.summary = response.content or ""
+        chat.summary = response.content
         chat.summarized_up_to = chat.message_count
         session.commit()

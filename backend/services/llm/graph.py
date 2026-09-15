@@ -63,16 +63,15 @@ def generate_answer(state: OverallState):
 
 
 def build_rag_graph():
-    workflow = StateGraph(
-        OverallState,
-        input_schema=InputState,
-        output_schema=OutputState,
-    )
+    workflow = StateGraph(OverallState, input_schema=InputState, output_schema=OutputState)
+
     workflow.add_node("retrieve", retrieve_context)
     workflow.add_node("answer_directly", answer_directly)
     workflow.add_node("generate", generate_answer)
     workflow.add_node("contextualize", contextualize)
     workflow.add_node("classify_rag", classify_rag)
+
+
     workflow.add_edge(START, "contextualize")
     workflow.add_edge("contextualize", "classify_rag")
     workflow.add_conditional_edges(
@@ -80,6 +79,7 @@ def build_rag_graph():
         route_question,
         {"retrieve": "retrieve", "answer_directly": "answer_directly"},
     )
+    
     workflow.add_edge("retrieve", "generate")
     workflow.add_edge("answer_directly", "generate")
     workflow.add_edge("generate", END)
