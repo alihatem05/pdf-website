@@ -2,13 +2,20 @@ from typing import TypedDict
 from uuid import UUID
 from langgraph.graph import END, START, StateGraph
 from backend.config import LLM_TOP_K
-from backend.services.llm.client import classify_rag_need, contextualize_question, llm_response
+from backend.services.llm.client import (
+    classify_rag_need,
+    contextualize_question,
+    llm_response,
+    plan_retrieval,
+)
 from backend.services.llm.prompt import build_general_messages, build_messages
 from backend.services.llm.retrieval import RetrievedChunk, retrieve
 
 
 class InputState(TypedDict):
     chat_id: UUID
+    document_ids: list[UUID]
+    document_names: dict[str, str]
     question: str
     history: list[dict[str, str]]
     summary: str | None
@@ -42,7 +49,18 @@ def route_question(state: OverallState):
 
 def retrieve_context(state: OverallState):
     search_question = state.get("contextualized_question", state["question"])
-    chunks = retrieve(state["chat_id"], search_question, top_k=LLM_TOP_K)
+    documents = [
+        {"id": str(document_id), "filename": state["document_names"].get(str(document_id), "")}
+        for document_id in state["document_ids"]
+    ]
+    top_k_by_document = plan_retrieval(search_question, documents, LLM_TOP_K)
+    chunks = retrieve(
+        state["chat_id"],
+        search_question,
+        state["document_ids"],
+        top_k_by_document=top_k_by_document,
+        document_names=state["document_names"],
+    )
     return {
         "chunks": chunks,
         "messages": build_messages(chunks, state.get("history", []), state["question"]),

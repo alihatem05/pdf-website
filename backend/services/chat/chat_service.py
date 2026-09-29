@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.config import MAX_UPLOAD_SIZE
 from backend.models.chat import Chat
-from backend.models.chat_message import ChatMessage
+from backend.models.chat_message import ChatMessage, message_ordering
 from backend.models.document import Document
 from backend.models.user import User
 from backend.services.chat.storage import upload_file
@@ -37,7 +37,7 @@ async def get_recent_messages(chat_id: UUID, db: AsyncSession, limit: int):
     result = await db.scalars(
         select(ChatMessage)
         .where(ChatMessage.chat_id == chat_id)
-        .order_by(ChatMessage.created_at.desc())
+        .order_by(*message_ordering(descending=True))
         .limit(limit)
     )
     return list(reversed(result.all()))

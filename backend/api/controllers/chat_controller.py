@@ -30,6 +30,8 @@ async def send_message(
     history = get_messages(recent_messages)
     result = await rag_graph.ainvoke({
         "chat_id": chat.id,
+        "document_ids": [document.id for document in chat.documents],
+        "document_names": {str(document.id): document.filename for document in chat.documents},
         "question": message.content,
         "history": history,
         "summary": chat.summary,

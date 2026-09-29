@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from .chat_message import message_ordering
 from .base import Base
 
 if TYPE_CHECKING:
@@ -37,7 +38,7 @@ class Chat(Base):
     messages: Mapped[list["ChatMessage"]] = relationship(
         back_populates="chat",
         cascade="all, delete-orphan",
-        order_by="ChatMessage.created_at",
+        order_by=message_ordering,
     )
 
     documents: Mapped[list["Document"]] = relationship(
