@@ -1,12 +1,13 @@
 from celery import Celery
+from config import REDIS_URL
 
 celery_app = Celery(
     "worker",
-    broker="redis://localhost:6379/0",
-    backend="redis://localhost:6379/0",
+    broker=REDIS_URL,
+    backend=REDIS_URL,
 )
 
 celery_app.conf.imports = (
-    "backend.services.llm.embed",
-    "backend.services.llm.summarize",
+    "services.llm.embed",
+    "services.llm.summarize",
 )

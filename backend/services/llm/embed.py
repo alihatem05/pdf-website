@@ -6,9 +6,9 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.celery_app import celery_app
-from backend.config import CELERY_DATABASE_URL
-from backend.models.document import Document
+from celery_app import celery_app
+from config import CELERY_DATABASE_URL
+from models.document import Document
 
 sync_engine = create_engine(CELERY_DATABASE_URL)
 SyncSession = sessionmaker(bind=sync_engine)

@@ -4,10 +4,10 @@ from types import SimpleNamespace
 from unittest.mock import patch
 from uuid import uuid4
 
-from backend.services.chat.storage import upload_file
-from backend.services.llm.client import contextualize_question, llm_response, plan_retrieval
-from backend.services.llm.prompt import build_messages
-from backend.services.llm.retrieval import RetrievedChunk, retrieve
+from services.chat.storage import upload_file
+from services.llm.client import contextualize_question, llm_response, plan_retrieval
+from services.llm.prompt import build_messages
+from services.llm.retrieval import RetrievedChunk, retrieve
 
 
 def test_prompt_contains_retrieved_context():
@@ -33,8 +33,8 @@ def test_retrieval_plan_uses_model_selected_budget_per_document():
     ]
     response = SimpleNamespace(content=json.dumps({first_id: 3, second_id: 7}))
 
-    with patch("backend.services.llm.client.ChatGroq"), patch(
-        "backend.services.llm.client.create_client"
+    with patch("services.llm.client.ChatGroq"), patch(
+        "services.llm.client.create_client"
     ) as create_client:
         create_client.return_value.invoke.return_value = response
         budgets = plan_retrieval("Compare their experience", documents, 8)
@@ -52,7 +52,7 @@ def test_retrieval_applies_budget_and_filename_to_each_document():
         return [SimpleNamespace(page_content="CV details", metadata={"page": 0})]
 
     vector_store = SimpleNamespace(max_marginal_relevance_search=search)
-    with patch("backend.services.llm.retrieval.get_chat_vector_store", return_value=vector_store):
+    with patch("services.llm.retrieval.get_chat_vector_store", return_value=vector_store):
         chunks = retrieve(
             uuid4(),
             "Compare experience",
@@ -68,7 +68,7 @@ def test_retrieval_applies_budget_and_filename_to_each_document():
 
 def test_follow_up_question_is_contextualized():
     response = SimpleNamespace(content="What does page 2 say about the training plan?", response_metadata={})
-    with patch("backend.services.llm.client.ChatGroq") as model:
+    with patch("services.llm.client.ChatGroq") as model:
         model.return_value.invoke.return_value = response
         result = contextualize_question(
             [{"role": "user", "content": "Tell me about the training plan."}],
@@ -80,8 +80,8 @@ def test_follow_up_question_is_contextualized():
 
 def test_empty_llm_completion_returns_visible_fallback():
     response = SimpleNamespace(content="", response_metadata={"finish_reason": "length"})
-    with patch("backend.services.llm.client.ChatGroq"), patch(
-        "backend.services.llm.client.create_client"
+    with patch("services.llm.client.ChatGroq"), patch(
+        "services.llm.client.create_client"
     ) as create_client:
         create_client.return_value.invoke.return_value = response
         result = llm_response([{"role": "user", "content": "Compare these CVs"}])
@@ -92,8 +92,8 @@ def test_empty_llm_completion_returns_visible_fallback():
 
 def test_llm_response_returns_nonempty_completion():
     response = SimpleNamespace(content="  CV A has more experience.  ")
-    with patch("backend.services.llm.client.ChatGroq"), patch(
-        "backend.services.llm.client.create_client"
+    with patch("services.llm.client.ChatGroq"), patch(
+        "services.llm.client.create_client"
     ) as create_client:
         create_client.return_value.invoke.return_value = response
         result = llm_response([{"role": "user", "content": "Compare these CVs"}])
@@ -105,7 +105,7 @@ def test_upload_limit_is_enforced(tmp_path):
     file = SimpleNamespace(read=lambda size: asyncio.sleep(0, result=b"12345"))
 
     async def run():
-        with patch("backend.services.chat.storage.UPLOAD_ROOT", tmp_path):
+        with patch("services.chat.storage.UPLOAD_ROOT", tmp_path):
             try:
                 await upload_file(file, "document-id", 4)
             except ValueError as error:

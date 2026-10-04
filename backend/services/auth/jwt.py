@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 
-from backend.config import JWT_SECRET, ALGORITHM, JWT_EXPIRY_TIME
+from config import JWT_SECRET, ALGORITHM, JWT_EXPIRY_TIME
 
 
 def create_access_token(user_id):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
-from backend.services.llm.embed import get_chat_vector_store
+from services.llm.embed import get_chat_vector_store
 from uuid import UUID
 
 

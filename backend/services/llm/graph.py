@@ -1,15 +1,15 @@
 from typing import TypedDict
 from uuid import UUID
 from langgraph.graph import END, START, StateGraph
-from backend.config import LLM_TOP_K
-from backend.services.llm.client import (
+from config import LLM_TOP_K
+from services.llm.client import (
     classify_rag_need,
     contextualize_question,
     llm_response,
     plan_retrieval,
 )
-from backend.services.llm.prompt import build_general_messages, build_messages
-from backend.services.llm.retrieval import RetrievedChunk, retrieve
+from services.llm.prompt import build_general_messages, build_messages
+from services.llm.retrieval import RetrievedChunk, retrieve
 
 
 class InputState(TypedDict):

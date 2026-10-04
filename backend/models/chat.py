@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from .chat_message import message_ordering
-from .base import Base
+from models.chat_message import message_ordering
+from models.base import Base
 
 if TYPE_CHECKING:
-    from .chat_message import ChatMessage
-    from .document import Document
-    from .user import User
+    from models.chat_message import ChatMessage
+    from models.document import Document
+    from models.user import User
 
 
 class Chat(Base):

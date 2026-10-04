@@ -1,11 +1,11 @@
 from langchain_groq import ChatGroq
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from backend.celery_app import celery_app
-from backend.config import CELERY_DATABASE_URL, SUMMARY_LIMIT
-from backend.models.chat import Chat
-from backend.models.chat_message import ChatMessage
-from backend.services.llm.client import create_client
+from celery_app import celery_app
+from config import CELERY_DATABASE_URL, SUMMARY_LIMIT
+from models.chat import Chat
+from models.chat_message import ChatMessage
+from services.llm.client import create_client
 
 sync_engine = create_engine(CELERY_DATABASE_URL)
 SyncSession = sessionmaker(bind=sync_engine)

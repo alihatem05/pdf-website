@@ -286,10 +286,11 @@ python -m pip install -r backend/requirements.txt
 
 ### 4. Prepare PostgreSQL and run migrations
 
-Create the configured PostgreSQL database, then run migrations from the project root:
+Create the configured PostgreSQL database, then run migrations from the backend directory:
 
 ```bash
-alembic -c backend/alembic.ini upgrade head
+cd backend
+alembic -c alembic.ini upgrade head
 ```
 
 The migration history creates users, chats, chat messages, documents, chat summary fields, and message counts. The repository includes older duplicate/branch revisions and a merge revision, so inspect the migration state before applying migrations to an existing database.
@@ -304,26 +305,26 @@ redis://localhost:6379/0
 
 ### 6. Start the backend API
 
-From the project root:
+From the backend directory:
 
 ```bash
-python -m uvicorn backend.server:app --reload --port 8000
+python -m uvicorn server:app --reload --port 8000
 ```
 
 The API is available at `http://localhost:8000`. FastAPI's development documentation is available at `http://localhost:8000/docs`.
 
 ### 7. Start a Celery worker
 
-From the project root with the virtual environment active:
+From the backend directory with the virtual environment active:
 
 ```bash
-celery -A backend.celery_app.celery_app worker --loglevel=info
+celery -A celery_app.celery_app worker --loglevel=info
 ```
 
 The worker is required for PDF embedding and asynchronous chat summaries. On Windows, if the default worker pool causes issues, use Celery's solo pool for local development:
 
 ```bash
-celery -A backend.celery_app.celery_app worker --pool=solo --loglevel=info
+celery -A celery_app.celery_app worker --pool=solo --loglevel=info
 ```
 
 ### 8. Install and start the frontend
@@ -449,10 +450,10 @@ The current backend test file is `backend/tests/test_rag_contract.py`. It covers
 - Follow-up question contextualization.
 - Upload size enforcement.
 
-Run it from the project root with the backend environment active:
+Run it from the backend directory with the backend environment active:
 
 ```bash
-python -m pytest backend/tests
+python -m pytest tests
 ```
 
 There is currently no frontend test script and no end-to-end test suite in the repository.
@@ -462,10 +463,11 @@ There is currently no frontend test script and no end-to-end test suite in the r
 ### Backend
 
 ```bash
-python -m uvicorn backend.server:app --reload --port 8000
-celery -A backend.celery_app.celery_app worker --loglevel=info
-alembic -c backend/alembic.ini upgrade head
-python -m pytest backend/tests
+cd backend
+python -m uvicorn server:app --reload --port 8000
+celery -A celery_app.celery_app worker --loglevel=info
+alembic -c alembic.ini upgrade head
+python -m pytest tests
 ```
 
 ### Frontend

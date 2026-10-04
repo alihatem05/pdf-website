@@ -2,19 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from backend.schemas.chat import (ChatResponseSchema, MessageResponseSchema, ShortChatResponseSchema, MessageRequestSchema)
-from backend.database import get_db
-from backend.models.chat import Chat
-from backend.dependencies.auth import get_current_user
-from backend.models.user import User
-from backend.models.chat_message import ChatMessage, MessageRole
-from backend.services.chat.storage import delete_file
-from backend.config import CHAT_HISTORY_LIMIT, SUMMARY_THRESHOLD
-from backend.services.chat.chat_service import get_recent_messages, load_chat, load_chat_meta, save_document
-from backend.services.llm.embed import embed_file, delete_embedding
-from backend.services.llm.graph import rag_graph
-from backend.services.llm.client import get_messages
-from backend.services.llm.summarize import update_chat_summary
+from schemas.chat import (ChatResponseSchema, MessageResponseSchema, ShortChatResponseSchema, MessageRequestSchema)
+from database import get_db
+from models.chat import Chat
+from dependencies.auth import get_current_user
+from models.user import User
+from models.chat_message import ChatMessage, MessageRole
+from services.chat.storage import delete_file
+from config import CHAT_HISTORY_LIMIT, SUMMARY_THRESHOLD
+from services.chat.chat_service import get_recent_messages, load_chat, load_chat_meta, save_document
+from services.llm.embed import embed_file, delete_embedding
+from services.llm.graph import rag_graph
+from services.llm.client import get_messages
+from services.llm.summarize import update_chat_summary
 
 router = APIRouter(prefix="/api/chats", tags=["chats"])
 

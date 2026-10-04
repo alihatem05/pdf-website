@@ -1,0 +1,54 @@
+x-backend: &backend
+  build: ./backend
+  image: pdf-backend:dev
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?}@database:5432/pdfdb
+    CELERY_DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?}@database:5432/pdfdb
+    REDIS_URL: redis://redis:6379/0
+    FRONTEND_URL: http://localhost:3000
+  volumes:
+    - uploads:/app/uploads
+    - chroma:/app/chroma_data
+    - hf_cache:/root/.cache/huggingface
+  depends_on:
+    database: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on: [backend]
+  backend:
+    <<: *backend
+    command: sh -c "alembic upgrade head && uvicorn server:app --host 0.0.0.0 --port 8000"
+    ports: ["8000:8000"]
+  worker:
+    <<: *backend
+    command: celery -A celery_app.celery_app worker --pool=solo --loglevel=info
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: pdfdb
+    ports: ["127.0.0.1:15432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pdfdb"]
+      interval: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  uploads:
+  chroma:
+  hf_cache:

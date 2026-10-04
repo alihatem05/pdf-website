@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Text, Enum, case
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from .base import Base
+from models.base import Base
 import enum
 
 if TYPE_CHECKING:
-    from .chat import Chat
+    from models.chat import Chat
 
 
 class MessageRole(str, enum.Enum):

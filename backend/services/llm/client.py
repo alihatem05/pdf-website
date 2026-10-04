@@ -1,8 +1,8 @@
 import json
 import logging
-
 from groq import AuthenticationError
 from langchain_groq import ChatGroq
+from config import LLM_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ def get_messages(chat_messages):
     ]
 
 def create_client(max_tokens=None):
-    return ChatGroq(model="openai/gpt-oss-20b", temperature=0, max_tokens=max_tokens)
+    return ChatGroq(model=LLM_MODEL, temperature=0, max_tokens=max_tokens)
 
 
 def contextualize_question(history, question, summary=None):

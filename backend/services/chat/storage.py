@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import UploadFile
 
-from backend.config import MAX_UPLOAD_SIZE
+from config import MAX_UPLOAD_SIZE
 
 UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads"
 

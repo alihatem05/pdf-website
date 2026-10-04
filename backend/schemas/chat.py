@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
-from backend.models.chat_message import MessageRole
+from models.chat_message import MessageRole
 
 class MessageResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -3,9 +3,9 @@ from jose import JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from sqlalchemy import select
-from backend.database import get_db
-from backend.models.user import User
-from backend.services.auth.jwt import decode_access_token
+from database import get_db
+from models.user import User
+from services.auth.jwt import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
