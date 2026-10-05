@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+from services.chat.storage import download_to_temp
 import chromadb
 from chromadb.utils import embedding_functions
 from langchain_community.document_loaders import PyPDFLoader
@@ -41,6 +43,7 @@ def get_chat_vector_store(chat_id):
         embedding_function=embedding_adapter,
     )
 
+
 @celery_app.task
 def embed_file(document_id: str, chat_id: str):
     with SyncSession() as session:
@@ -48,9 +51,11 @@ def embed_file(document_id: str, chat_id: str):
         if document is None:
             return
 
+        path = None
         try:
             collection = get_chat_collection(chat_id)
-            pages = PyPDFLoader(document.storage_path).load()
+            path = download_to_temp(document.storage_path)
+            pages = PyPDFLoader(path).load()
             chunks = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100).split_documents(pages)
 
             texts = [c.page_content for c in chunks]
@@ -70,6 +75,9 @@ def embed_file(document_id: str, chat_id: str):
         except Exception as e:
             document.status = "failed"
             document.error_message = str(e)
+        finally:
+            if path and os.path.exists(path):
+                os.remove(path)
 
         session.commit()
 

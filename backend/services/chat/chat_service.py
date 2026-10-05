@@ -1,10 +1,8 @@
 from uuid import UUID
-
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
 from config import MAX_UPLOAD_SIZE
 from models.chat import Chat
 from models.chat_message import ChatMessage, message_ordering
@@ -41,7 +39,6 @@ async def get_recent_messages(chat_id: UUID, db: AsyncSession, limit: int):
         .limit(limit)
     )
     return list(reversed(result.all()))
-
 
 async def save_document(file: UploadFile, chat_id: UUID, db: AsyncSession) -> Document:
     document = Document(

@@ -6,7 +6,7 @@ from config import FRONTEND_URL
 
 app = FastAPI(title="PDF Website API")
 
-origins = [FRONTEND_URL] if FRONTEND_URL else ["*"]
+origins = [FRONTEND_URL] if FRONTEND_URL else []
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -14,5 +14,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
 
 app.include_router(api_router)

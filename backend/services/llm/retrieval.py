@@ -10,16 +10,7 @@ class RetrievedChunk:
     metadata: dict[str, Any]
 
 
-def retrieve(
-    chat_id,
-    question,
-    document_ids,
-    top_k_by_document=None,
-    document_names=None,
-    top_k=10,
-    fetch_k=20,
-    lambda_mult=0.5,
-):
+def retrieve(chat_id, question, document_ids, top_k_by_document=None, document_names=None, top_k=10, fetch_k=20, lambda_mult=0.5):
     if top_k < 1 or not document_ids:
         return []
 

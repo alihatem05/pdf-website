@@ -6,14 +6,14 @@ x-backend: &backend
     DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?}@database:5432/pdfdb
     CELERY_DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?}@database:5432/pdfdb
     REDIS_URL: redis://redis:6379/0
-    FRONTEND_URL: http://localhost:3000
+    S3_ENDPOINT_URL: http://rustfs:9000
   volumes:
-    - uploads:/app/uploads
     - chroma:/app/chroma_data
     - hf_cache:/root/.cache/huggingface
   depends_on:
     database: { condition: service_healthy }
     redis: { condition: service_healthy }
+    rustfs: { condition: service_started }
 
 services:
   frontend:
@@ -22,11 +22,19 @@ services:
     depends_on: [backend]
   backend:
     <<: *backend
-    command: sh -c "alembic upgrade head && uvicorn server:app --host 0.0.0.0 --port 8000"
+    command: sh -c "python -c 'from services.chat.storage import ensure_bucket; ensure_bucket()' && alembic upgrade head && uvicorn server:app --host 0.0.0.0 --port 8000"
     ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
   worker:
     <<: *backend
     command: celery -A celery_app.celery_app worker --pool=solo --loglevel=info
+    depends_on:
+      backend: { condition: service_healthy }
   database:
     image: postgres:17
     environment:
@@ -46,9 +54,15 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY}
+    volumes: [rustfs_data:/data]
 
 volumes:
   pgdata:
-  uploads:
   chroma:
   hf_cache:
+  rustfs_data:

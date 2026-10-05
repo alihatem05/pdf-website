@@ -1,26 +1,75 @@
-from pathlib import Path
-
+import os
+import tempfile
+import time
+from uuid import UUID
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError, EndpointConnectionError
 from fastapi import UploadFile
+from fastapi.concurrency import run_in_threadpool
+from config import (S3_ACCESS_KEY, S3_BUCKET, S3_ENDPOINT_URL, S3_REGION, S3_SECRET_KEY)
 
-from config import MAX_UPLOAD_SIZE
+_client = boto3.client(
+    "s3",
+    region_name=S3_REGION,
+    endpoint_url=S3_ENDPOINT_URL,  
+    aws_access_key_id=S3_ACCESS_KEY, 
+    aws_secret_access_key=S3_SECRET_KEY,
+    config=Config(s3={"addressing_style": "path"}),
+)
 
-UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads"
 
-async def upload_file(file: UploadFile, document_id, max_size=MAX_UPLOAD_SIZE):
-    UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+def ensure_bucket(retries: int = 30) -> None:
+    if not S3_ENDPOINT_URL:
+        return
+    for _ in range(retries):
+        try:
+            _client.head_bucket(Bucket=S3_BUCKET)
+            return
+        except ClientError as e:
+            if e.response["Error"]["Code"] in ("404", "NoSuchBucket", "NotFound"):
+                _client.create_bucket(Bucket=S3_BUCKET)
+                return
+            raise
+        except EndpointConnectionError:
+            time.sleep(2)
+    raise RuntimeError("S3 endpoint never became reachable")
 
-    filename = f"{document_id}.pdf"
-    destination = UPLOAD_ROOT / filename
 
-    contents = await file.read(max_size + 1)
+def _object_key(document_id: UUID) -> str:
+    return f"documents/{document_id}.pdf"
 
-    if len(contents) > max_size:
-        raise ValueError("File exceeds the upload limit")
 
-    destination.write_bytes(contents)
-    return str(destination)
+async def upload_file(file: UploadFile, document_id: UUID, max_size: int) -> str:
+    file.file.seek(0, os.SEEK_END)
+    size = file.file.tell()
+    file.file.seek(0)
+    if size > max_size:
+        raise ValueError(f"File exceeds the {max_size // (1024 * 1024)} MB limit")
 
-def delete_file(storage_path):
-    path = Path(storage_path)
-    if path.exists():
-        path.unlink()
+    key = _object_key(document_id)
+    await run_in_threadpool(
+        _client.upload_fileobj,
+        file.file,
+        S3_BUCKET,
+        key,
+        ExtraArgs={"ContentType": "application/pdf"},
+    )
+    return key
+
+
+def download_to_temp(key: str) -> str:
+    tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    try:
+        _client.download_fileobj(S3_BUCKET, key, tmp)
+    except Exception:
+        tmp.close()
+        os.remove(tmp.name)
+        raise
+    tmp.close()
+    return tmp.name
+
+
+def delete_file(key: str) -> None:
+    if key:
+        _client.delete_object(Bucket=S3_BUCKET, Key=key)
