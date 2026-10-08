@@ -14,7 +14,6 @@ class Document(Base):
         UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True
     )
     filename: Mapped[str] = mapped_column(String, nullable=False)
-    storage_path: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="processing")
     error_message: Mapped[str | None] = mapped_column(String, nullable=True)
 

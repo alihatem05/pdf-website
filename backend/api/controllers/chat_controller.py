@@ -11,7 +11,7 @@ from models.chat_message import ChatMessage, MessageRole
 from services.chat.storage import delete_file
 from config import CHAT_HISTORY_LIMIT, SUMMARY_THRESHOLD
 from services.chat.chat_service import get_recent_messages, load_chat, load_chat_meta, save_document
-from services.llm.embed import embed_file, delete_embedding
+from services.llm.embed import embed_file
 from services.llm.graph import rag_graph
 from services.llm.client import get_messages
 from services.llm.summarize import update_chat_summary
@@ -124,9 +124,7 @@ async def delete_chat(
     chat = await load_chat_meta(chat_id, user, db)
 
     for document in chat.documents:
-        delete_file(document.storage_path)
-    if chat.documents:
-        delete_embedding(chat.id)
+        delete_file(document.id)
 
     await db.delete(chat)
     await db.commit()

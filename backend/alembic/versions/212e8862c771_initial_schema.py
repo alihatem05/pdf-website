@@ -57,7 +57,6 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('chat_id', sa.UUID(), nullable=False),
     sa.Column('filename', sa.String(), nullable=False),
-    sa.Column('storage_path', sa.String(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
     sa.Column('error_message', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

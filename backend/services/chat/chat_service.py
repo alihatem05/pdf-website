@@ -44,14 +44,13 @@ async def save_document(file: UploadFile, chat_id: UUID, db: AsyncSession) -> Do
     document = Document(
         chat_id=chat_id,
         filename=file.filename or "document.pdf",
-        storage_path="",
         status="processing",
     )
     db.add(document)
     await db.flush()
 
     try:
-        document.storage_path = await upload_file(file, document.id, MAX_UPLOAD_SIZE)
+        await upload_file(file, document.id, MAX_UPLOAD_SIZE)
     except ValueError as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc
 

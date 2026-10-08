@@ -12,8 +12,8 @@ from config import (S3_ACCESS_KEY, S3_BUCKET, S3_ENDPOINT_URL, S3_REGION, S3_SEC
 _client = boto3.client(
     "s3",
     region_name=S3_REGION,
-    endpoint_url=S3_ENDPOINT_URL,  
-    aws_access_key_id=S3_ACCESS_KEY, 
+    endpoint_url=S3_ENDPOINT_URL,
+    aws_access_key_id=S3_ACCESS_KEY,
     aws_secret_access_key=S3_SECRET_KEY,
     config=Config(s3={"addressing_style": "path"}),
 )
@@ -36,32 +36,30 @@ def ensure_bucket(retries: int = 30) -> None:
     raise RuntimeError("S3 endpoint never became reachable")
 
 
-def _object_key(document_id: UUID) -> str:
+def object_key(document_id: UUID) -> str:
     return f"documents/{document_id}.pdf"
 
 
-async def upload_file(file: UploadFile, document_id: UUID, max_size: int) -> str:
+async def upload_file(file: UploadFile, document_id: UUID, max_size: int) -> None:
     file.file.seek(0, os.SEEK_END)
     size = file.file.tell()
     file.file.seek(0)
     if size > max_size:
         raise ValueError(f"File exceeds the {max_size // (1024 * 1024)} MB limit")
 
-    key = _object_key(document_id)
     await run_in_threadpool(
         _client.upload_fileobj,
         file.file,
         S3_BUCKET,
-        key,
+        object_key(document_id),
         ExtraArgs={"ContentType": "application/pdf"},
     )
-    return key
 
 
-def download_to_temp(key: str) -> str:
+def download_to_temp(document_id: UUID) -> str:
     tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     try:
-        _client.download_fileobj(S3_BUCKET, key, tmp)
+        _client.download_fileobj(S3_BUCKET, object_key(document_id), tmp)
     except Exception:
         tmp.close()
         os.remove(tmp.name)
@@ -70,6 +68,5 @@ def download_to_temp(key: str) -> str:
     return tmp.name
 
 
-def delete_file(key: str) -> None:
-    if key:
-        _client.delete_object(Bucket=S3_BUCKET, Key=key)
+def delete_file(document_id: UUID) -> None:
+    _client.delete_object(Bucket=S3_BUCKET, Key=object_key(document_id))

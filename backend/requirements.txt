@@ -18,7 +18,7 @@ langgraph
 langchain-groq
 langchain-community
 langchain-text-splitters
-chromadb
 sentence-transformers
 pypdf
 boto3
+pgvector
