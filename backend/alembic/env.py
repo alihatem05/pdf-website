@@ -14,7 +14,11 @@ for root in (PROJECT_ROOT, BACKEND_DIR):
 
 from config import DATABASE_URL
 from models.base import Base
-from models.user import User
+from models.user import User  # noqa: F401
+from models.chat import Chat  # noqa: F401
+from models.chat_message import ChatMessage  # noqa: F401
+from models.document import Document  # noqa: F401
+from models.chunk import Chunk  # noqa: F401
 
 config = context.config
 
@@ -24,7 +28,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set. Check your backend/.env file.")
+    raise RuntimeError("DATABASE_URL is not set. Check your root .env file.")
 
 
 def run_migrations_offline() -> None:

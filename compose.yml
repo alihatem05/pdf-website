@@ -8,7 +8,6 @@ x-backend: &backend
     REDIS_URL: redis://redis:6379/0
     S3_ENDPOINT_URL: http://rustfs:9000
   volumes:
-    - chroma:/app/chroma_data
     - hf_cache:/root/.cache/huggingface
   depends_on:
     database: { condition: service_healthy }
@@ -36,7 +35,7 @@ services:
     depends_on:
       backend: { condition: service_healthy }
   database:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
@@ -63,6 +62,5 @@ services:
 
 volumes:
   pgdata:
-  chroma:
   hf_cache:
   rustfs_data:
